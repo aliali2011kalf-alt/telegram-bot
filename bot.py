@@ -27,7 +27,7 @@ SUPABASE_URL = os.environ.get(
 
 SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
 
-WEB_URL = "https://kalfmhmod.github.io/telegram-bot/"
+WEB_URL = "https://aliali2011kalf-alt.github.io/telegram-bot/"
 
 
 # =========================
