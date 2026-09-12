@@ -267,11 +267,23 @@ def main():
     print("Mining cycle: 24 hours")
     print("==============================")
 
-    application = (
-        Application
-        .builder()
-        .token(TOKEN)
-        .build()
+    async def setup_menu(application):
+    await application.bot.set_chat_menu_button(
+        menu_button=MenuButtonWebApp(
+            text="فتح تطبيق ANF 🚀",
+            web_app=WebAppInfo(
+                url=WEB_URL
+            )
+        )
+    )
+
+
+application = (
+    Application
+    .builder()
+    .token(TOKEN)
+    .post_init(setup_menu)
+    .build()
     )
 
     application.add_handler(
