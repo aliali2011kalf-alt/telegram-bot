@@ -14,9 +14,8 @@ from telegram.ext import (
     ContextTypes,
 )
 
-
 # =========================
-# SETTINGS
+# إعدادات ANF
 # =========================
 
 TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
@@ -26,13 +25,21 @@ SUPABASE_URL = os.environ.get(
     "https://oejaiweclbxbwqikaznn.supabase.co",
 )
 
-SUPABASE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_KEY = (
+    os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+    or os.environ.get("SUPABASE_SECRET_KEY")
+)
 
 WEB_URL = "https://aliali2011kalf-alt.github.io/telegram-bot/"
 
+BOT_USERNAME = "ANF_AIRDROP_bot"
+
+REFERRAL_REWARD = 100
+MINING_RATE = 0.0001
+
 
 # =========================
-# SUPABASE
+# Supabase
 # =========================
 
 def supabase_headers():
@@ -43,26 +50,19 @@ def supabase_headers():
     }
 
 
-def supabase_rpc(function_name, telegram_id):
-    url = (
-        f"{SUPABASE_URL}/rest/v1/rpc/"
-        f"{function_name}"
-    )
+def supabase_rpc(function_name, payload):
+    url = f"{SUPABASE_URL}/rest/v1/rpc/{function_name}"
 
     response = requests.post(
         url,
         headers=supabase_headers(),
-        json={
-            "p_telegram_id": int(telegram_id)
-        },
+        json=payload,
         timeout=20,
     )
 
     if not response.ok:
         raise RuntimeError(
-            f"Supabase error "
-            f"{response.status_code}: "
-            f"{response.text}"
+            f"Supabase RPC error {response.status_code}: {response.text}"
         )
 
     if not response.text:
@@ -71,15 +71,12 @@ def supabase_rpc(function_name, telegram_id):
     return response.json()
 
 
-# =========================
-# PROFILE
-# =========================
-
 def get_profile(telegram_id):
     url = (
         f"{SUPABASE_URL}/rest/v1/profiles"
         f"?telegram_id=eq.{int(telegram_id)}"
         f"&select=*"
+        f"&limit=1"
     )
 
     response = requests.get(
@@ -90,9 +87,7 @@ def get_profile(telegram_id):
 
     if not response.ok:
         raise RuntimeError(
-            f"Profile error "
-            f"{response.status_code}: "
-            f"{response.text}"
+            f"Profile error {response.status_code}: {response.text}"
         )
 
     data = response.json()
@@ -104,217 +99,287 @@ def get_profile(telegram_id):
 
 
 # =========================
-# START
+# إنشاء حساب المستخدم
 # =========================
 
-async def start(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
+def create_profile(user):
+    existing = get_profile(user.id)
+
+    if existing:
+        return existing
+
+    # إنشاء مستخدم في Supabase Auth
+    auth_url = f"{SUPABASE_URL}/auth/v1/admin/users"
+
+    auth_payload = {
+        "email": f"telegram_{user.id}@anf.local",
+        "password": os.urandom(24).hex(),
+        "email_confirm": True,
+        "user_metadata": {
+            "telegram_id": user.id,
+            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+        },
+    }
+
+    response = requests.post(
+        auth_url,
+        headers=supabase_headers(),
+        json=auth_payload,
+        timeout=20,
+    )
+
+    if not response.ok:
+        # ربما تم إنشاء Auth user مسبقًا
+        print("Auth create:", response.status_code, response.text)
+
+    auth_data = {}
+
+    try:
+        auth_data = response.json()
+    except Exception:
+        pass
+
+    auth_id = auth_data.get("id")
+
+    if not auth_id:
+        # إعادة البحث عن الحساب
+        search_url = (
+            f"{SUPABASE_URL}/auth/v1/admin/users"
+            f"?page=1&per_page=1000"
+        )
+
+        search_response = requests.get(
+            search_url,
+            headers=supabase_headers(),
+            timeout=20,
+        )
+
+        if search_response.ok:
+            users = search_response.json().get("users", [])
+
+            for auth_user in users:
+                metadata = auth_user.get("user_metadata") or {}
+
+                if str(metadata.get("telegram_id")) == str(user.id):
+                    auth_id = auth_user.get("id")
+                    break
+
+    if not auth_id:
+        raise RuntimeError("تعذر إنشاء حساب Supabase للمستخدم.")
+
+    referral_code = str(user.id)
+
+    profile_payload = {
+        "id": auth_id,
+        "telegram_id": user.id,
+        "username": user.username,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "referral_code": referral_code,
+        "balance": 0,
+        "is_active": True,
+    }
+
+    profile_url = f"{SUPABASE_URL}/rest/v1/profiles"
+
+    profile_response = requests.post(
+        profile_url,
+        headers={
+            **supabase_headers(),
+            "Prefer": "return=representation",
+        },
+        json=profile_payload,
+        timeout=20,
+    )
+
+    if not profile_response.ok:
+        raise RuntimeError(
+            f"Profile create error {profile_response.status_code}: "
+            f"{profile_response.text}"
+        )
+
+    data = profile_response.json()
+
+    if not data:
+        raise RuntimeError("لم يتم إنشاء الملف الشخصي.")
+
+    return data[0]
+
+
+# =========================
+# معالجة الإحالة
+# =========================
+
+def process_referral(profile, referral_code):
+    if not referral_code:
+        return None
+
+    try:
+        result = supabase_rpc(
+            "claim_referral_reward",
+            {
+                "p_referred_id": profile["id"],
+                "p_referral_code": str(referral_code),
+            },
+        )
+
+        print("Referral result:", result)
+
+        return result
+
+    except Exception as e:
+        print("Referral error:", e)
+        return None
+
+
+# =========================
+# /start
+# =========================
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user = update.effective_user
 
     if user is None:
         return
 
-    telegram_id = user.id
-
-    # Check profile
     try:
-        profile = get_profile(telegram_id)
+        # إنشاء حساب المستخدم
+        profile = create_profile(user)
 
-        if profile is None:
-            await update.message.reply_text(
-                "⚠️ لم يتم إنشاء حسابك في النظام بعد.\n\n"
-                "افتح التطبيق من الزر بالأسفل ليتم إنشاء حسابك تلقائيًا."
+        # قراءة كود الإحالة من:
+        # /start REFERRAL_CODE
+        referral_code = None
+
+        if context.args:
+            referral_code = context.args[0]
+
+        # معالجة الإحالة
+        if referral_code:
+            process_referral(
+                profile,
+                referral_code,
             )
 
     except Exception as e:
-        print("Profile check error:", e)
+        print("Start error:", e)
 
-    keyboard = [
-        [
-            InlineKeyboardButton(
-                "🚀 فتح تطبيق ANF",
-                web_app=WebAppInfo(
-                    url=WEB_URL
-                ),
-            )
-        ]
-    ]
+    keyboard = [[
+        InlineKeyboardButton(
+            "🚀 فتح تطبيق ANF",
+            web_app=WebAppInfo(url=WEB_URL),
+        )
+    ]]
 
-    reply_markup = InlineKeyboardMarkup(
-        keyboard
-    )
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
     await update.message.reply_text(
         "👋 أهلاً بك في منصة ANF\n\n"
         "🪙 عملة ANF\n"
         "⛓️ شبكة TON\n\n"
+
         "⛏️ التعدين:\n"
-        "0.01 ANF كل ثانية\n\n"
+        "0.0001 ANF كل ثانية\n\n"
+
         "⏱️ مدة دورة التعدين:\n"
         "24 ساعة\n\n"
-        "🎁 ابدأ التعدين واجمع عملات ANF.\n\n"
+
+        "🎁 مكافأة الإحالة:\n"
+        "100 ANF لكل إحالة ناجحة\n\n"
+
         "👇 اضغط الزر لفتح التطبيق:",
         reply_markup=reply_markup,
     )
 
 
 # =========================
-# HELP
+# /help
 # =========================
 
-async def help_command(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
-        "🚀 استخدم /start لفتح تطبيق ANF."
+        "🤖 أوامر منصة ANF\n\n"
+        "/start - فتح منصة ANF\n"
+        "/help - المساعدة\n"
+        "/mining - معلومات التعدين\n\n"
+        "🪙 ANF على شبكة TON"
     )
 
 
 # =========================
-# MINING TEST COMMAND
+# /mining
 # =========================
 
-async def mining_command(
-    update: Update,
-    context: ContextTypes.DEFAULT_TYPE,
-):
+async def mining(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
-    user = update.effective_user
-
-    if user is None:
-        return
-
-    try:
-
-        result = supabase_rpc(
-            "anf_get_mining_status_by_telegram",
-            user.id,
-        )
-
-        if isinstance(result, list) and result:
-            result = result[0]
-
-        if not isinstance(result, dict):
-            result = {}
-
-        balance = result.get(
-            "balance",
-            0,
-        )
-
-        claimable = result.get(
-            "claimable",
-            0,
-        )
-
-        active = result.get(
-            "active",
-            False,
-        )
-
-        rate = result.get(
-            "rate_per_second",
-            0.01,
-        )
-
-        if active:
-            status = "🟢 التعدين يعمل"
-        else:
-            status = "🔴 التعدين متوقف"
-
-        await update.message.reply_text(
-            "⛏️ حالة التعدين\n\n"
-            f"{status}\n\n"
-            f"💰 الرصيد: {balance} ANF\n"
-            f"🎁 القابل للمطالبة: {claimable} ANF\n"
-            f"⚡ السرعة: {rate} ANF/ثانية"
-        )
-
-    except Exception as e:
-
-        print("Mining status error:", e)
-
-        await update.message.reply_text(
-            "⚠️ حدث خطأ أثناء جلب حالة التعدين."
-        )
+    await update.message.reply_text(
+        "⛏️ تعدين ANF\n\n"
+        "معدل التعدين:\n"
+        "0.0001 ANF كل ثانية\n\n"
+        "⏱️ مدة دورة التعدين:\n"
+        "24 ساعة\n\n"
+        "بعد انتهاء الدورة يمكنك بدء دورة جديدة من التطبيق."
+    )
 
 
 # =========================
-# MAIN
+# زر القائمة داخل Telegram
+# =========================
+
+async def setup_menu(application):
+
+    await application.bot.set_chat_menu_button(
+        menu_button=MenuButtonWebApp(
+            text="🚀 ANF",
+            web_app=WebAppInfo(url=WEB_URL),
+        )
+    )
+
+
+# =========================
+# تشغيل البوت
 # =========================
 
 def main():
 
     if not TOKEN:
         raise RuntimeError(
-            "TELEGRAM_BOT_TOKEN غير موجود في GitHub Secrets"
+            "TELEGRAM_BOT_TOKEN غير موجود في متغيرات البيئة."
         )
 
     if not SUPABASE_KEY:
         raise RuntimeError(
-            "SUPABASE_SERVICE_ROLE_KEY غير موجود في GitHub Secrets"
+            "SUPABASE_SERVICE_ROLE_KEY أو SUPABASE_SECRET_KEY غير موجود."
         )
 
-    print("==============================")
-    print("ANF BOT STARTING")
-    print("==============================")
-    print("Mining rate: 0.01 ANF / second")
-    print("Mining cycle: 24 hours")
-    print("==============================")
-
-    async def setup_menu(application):
-    await application.bot.set_chat_menu_button(
-        menu_button=MenuButtonWebApp(
-            text="فتح تطبيق ANF 🚀",
-            web_app=WebAppInfo(
-                url=WEB_URL
-            )
-        )
-    )
-
-
-application = (
-    Application
-    .builder()
-    .token(TOKEN)
-    .post_init(setup_menu)
-    .build()
+    application = (
+        Application.builder()
+        .token(TOKEN)
+        .post_init(setup_menu)
+        .build()
     )
 
     application.add_handler(
-        CommandHandler(
-            "start",
-            start,
-        )
+        CommandHandler("start", start)
     )
 
     application.add_handler(
-        CommandHandler(
-            "help",
-            help_command,
-        )
+        CommandHandler("help", help_command)
     )
 
     application.add_handler(
-        CommandHandler(
-            "mining",
-            mining_command,
-        )
+        CommandHandler("mining", mining)
     )
+
+    print("ANF Bot is running...")
 
     application.run_polling(
-        drop_pending_updates=True
+        allowed_updates=Update.ALL_TYPES
     )
 
-
-# =========================
-# RUN
-# =========================
 
 if __name__ == "__main__":
     main()
