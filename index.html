@@ -1,706 +1,913 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ANF Airdrop</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#080808">
+<title>ANF Airdrop</title>
 
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script src="https://unpkg.com/@tonconnect/ui@2.0.9/dist/tonconnect-ui.min.js"></script>
 
-  <style>
-    * { box-sizing: border-box; }
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ background:
+ radial-gradient(circle at 50% -10%,#4b370d 0,#15120a 18%,#080808 48%,#050505 100%);
+ color:#fff;
+ font-family:Arial,sans-serif;
+ min-height:100vh;
+ padding-bottom:82px
+}
+.container{max-width:520px;margin:auto;padding:14px}
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background:
-        radial-gradient(circle at top, #30250b 0%, #0b0d14 35%, #05060a 100%);
-      color: #fff;
-      min-height: 100vh;
-    }
+.header{text-align:center;padding:12px 0 18px}
+.logo{
+ width:76px;height:76px;margin:auto;border-radius:50%;
+ display:flex;align-items:center;justify-content:center;
+ font-size:27px;font-weight:900;color:#111;
+ background:linear-gradient(145deg,#fff6bd,#e5b52f,#fff0a0);
+ box-shadow:0 0 35px #d6a82e55
+}
+h1{margin:11px 0 3px;color:#f5cc55;font-size:25px}
+.subtitle{color:#999;font-size:13px}
 
-    .container {
-      max-width: 520px;
-      margin: auto;
-      padding: 16px;
-    }
+.card{
+ background:linear-gradient(145deg,#171717,#101010);
+ border:1px solid #d4a72e2b;
+ border-radius:22px;
+ padding:17px;
+ margin-bottom:14px;
+ box-shadow:0 12px 35px #0008
+}
+.balance{text-align:center;font-size:38px;font-weight:900;color:#f5cc55}
+.coin{text-align:center;color:#888;font-size:13px;margin-top:2px}
 
-    .header {
-      text-align: center;
-      padding: 15px 0 8px;
-    }
+.section-title{margin:0 0 13px;color:#f5cc55;font-size:19px}
+.mining{text-align:center}
+.rate{color:#d8b34a;font-weight:bold;font-size:14px}
+.claimable{font-size:28px;font-weight:900;margin:15px 0;color:#fff}
+.status{text-align:center;color:#999;min-height:21px;margin-top:9px}
+.success{color:#48e59b}.error{color:#ff6868}
 
-    .logo {
-      width: 76px;
-      height: 76px;
-      margin: auto;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 28px;
-      font-weight: 900;
-      color: #111;
-      background: linear-gradient(145deg,#fff2a8,#d9a62e,#fff0a0);
-      box-shadow: 0 0 30px rgba(231,180,55,.35);
-    }
+button{
+ width:100%;border:0;border-radius:15px;padding:14px;
+ margin-top:9px;font-size:15px;font-weight:bold;
+ color:#111;background:linear-gradient(135deg,#fff2a5,#dba82d);
+ cursor:pointer
+}
+button:disabled{opacity:.4}
+.dark-btn{
+ background:#202020;color:#fff;border:1px solid #383838
+}
 
-    h1 {
-      margin: 12px 0 3px;
-      color: #f4c84a;
-    }
+.daily{
+ text-align:center;
+ background:linear-gradient(145deg,#201a0b,#12100a);
+ border-color:#dcae3544
+}
+.daily-amount{font-size:34px;font-weight:900;color:#f5cc55}
+.daily-text{color:#aaa;font-size:13px;margin:5px 0 10px}
 
-    .subtitle {
-      color: #999;
-      font-size: 14px;
-    }
+.task{
+ background:#151515;border:1px solid #2d2d2d;
+ border-radius:17px;padding:14px;margin-top:10px
+}
+.task-title{font-weight:bold;font-size:17px}
+.task-desc{color:#999;font-size:13px;margin:6px 0}
+.reward{color:#f5cc55;font-weight:bold}
+.task-actions{display:flex;gap:8px}
+.task-actions button{flex:1}
+.visit{background:#262626;color:#fff}
 
-    .card {
-      background: rgba(19,21,29,.94);
-      border: 1px solid rgba(220,174,55,.18);
-      border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 15px;
-      box-shadow: 0 8px 30px rgba(0,0,0,.25);
-    }
+.wallet{
+ text-align:center
+}
+.wallet-icon{font-size:35px;margin-bottom:5px}
+.wallet-address{
+ margin-top:10px;
+ padding:10px;
+ border-radius:12px;
+ background:#0b0b0b;
+ color:#aaa;
+ font-size:12px;
+ word-break:break-all
+}
 
-    .balance {
-      text-align: center;
-      font-size: 38px;
-      font-weight: 900;
-      color: #f4c84a;
-      margin: 10px 0 0;
-    }
+.row{
+ display:flex;justify-content:space-between;
+ padding:12px 0;border-bottom:1px solid #292929;
+ font-size:14px
+}
+.row:last-child{border-bottom:0}
+.row span:last-child{color:#f0c64d}
 
-    .coin {
-      text-align: center;
-      color: #aaa;
-    }
+.nav{
+ position:fixed;bottom:0;left:0;right:0;
+ background:#0b0b0bf2;
+ backdrop-filter:blur(15px);
+ border-top:1px solid #2d2d2d;
+ display:flex;justify-content:center;
+ z-index:50
+}
+.nav-inner{width:520px;display:flex}
+.nav button{
+ margin:0;border-radius:0;background:transparent;
+ color:#888;padding:11px 5px;font-size:11px
+}
+.nav button.active{color:#f5cc55}
+.nav-icon{display:block;font-size:19px;margin-bottom:2px}
 
-    .mining {
-      text-align: center;
-    }
+.page{display:none}
+.page.active{display:block}
 
-    .rate {
-      color: #d8b34a;
-      margin: 8px 0;
-      font-weight: bold;
-    }
+.lang{
+ position:absolute;
+ top:12px;
+ left:14px;
+ background:#1b1b1b;
+ color:#f5cc55;
+ border:1px solid #4a3b18;
+ border-radius:10px;
+ padding:7px 10px;
+ width:auto;
+ margin:0;
+ font-size:12px
+}
 
-    .claimable {
-      font-size: 28px;
-      font-weight: bold;
-      margin: 16px 0;
-    }
+.loading{text-align:center;color:#777;padding:15px}
 
-    .status {
-      text-align: center;
-      color: #aaa;
-      min-height: 22px;
-      margin-top: 10px;
-    }
-
-    .success { color: #45e39a; }
-    .error { color: #ff6868; }
-
-    button {
-      width: 100%;
-      border: 0;
-      border-radius: 14px;
-      padding: 14px;
-      margin-top: 9px;
-      font-size: 16px;
-      font-weight: bold;
-      color: #111;
-      background: linear-gradient(135deg,#fff0a0,#dba92f);
-      cursor: pointer;
-    }
-
-    button:disabled {
-      opacity: .45;
-      cursor: not-allowed;
-    }
-
-    .dark-btn {
-      background: #242633;
-      color: #fff;
-      border: 1px solid #3a3d4a;
-    }
-
-    .task {
-      background: #171923;
-      border: 1px solid #2e303b;
-      border-radius: 16px;
-      padding: 15px;
-      margin-top: 12px;
-    }
-
-    .task-title {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 5px;
-    }
-
-    .task-desc {
-      color: #999;
-      font-size: 13px;
-      margin-bottom: 8px;
-    }
-
-    .reward {
-      color: #f4c84a;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .task-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .task-actions button {
-      margin-top: 0;
-    }
-
-    .visit {
-      background: #252936;
-      color: white;
-    }
-
-    .timer {
-      color: #aaa;
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .row {
-      display: flex;
-      justify-content: space-between;
-      padding: 11px 0;
-      border-bottom: 1px solid #292c37;
-    }
-
-    .row:last-child {
-      border-bottom: 0;
-    }
-
-    .section-title {
-      margin-top: 0;
-      color: #f4c84a;
-    }
-
-    .loading {
-      text-align: center;
-      color: #888;
-      padding: 12px;
-    }
-  </style>
+.timer{
+ color:#888;font-size:12px;margin-top:7px
+}
+</style>
 </head>
 
 <body>
 
+<button class="lang" onclick="toggleLanguage()">EN</button>
+
 <div class="container">
 
-  <div class="header">
-    <div class="logo">ANF</div>
-    <h1>ANF Airdrop</h1>
-    <div class="subtitle">Earn ANF • Mine • Complete Tasks</div>
-  </div>
+<header class="header">
+ <div class="logo">ANF</div>
+ <h1>ANF Airdrop</h1>
+ <div class="subtitle" data-i18n="subtitle">
+  اربح ANF • تعدين • مهام • إحالات
+ </div>
+</header>
 
-  <div class="card">
-    <div class="balance" id="balance">0.00000000</div>
-    <div class="coin">ANF</div>
-  </div>
+<!-- HOME -->
+<section id="home" class="page active">
 
-  <div class="card mining">
+<div class="card">
+ <div class="balance" id="balance">0.00000000</div>
+ <div class="coin">ANF</div>
+</div>
 
-    <h2>⛏️ التعدين</h2>
+<div class="card daily">
+ <h2 class="section-title" data-i18n="dailyTitle">🎁 المكافأة اليومية</h2>
+ <div class="daily-amount">2 ANF</div>
+ <div class="daily-text" data-i18n="dailyText">
+  مكافأة مجانية كل 24 ساعة
+ </div>
+ <button id="dailyBtn" onclick="claimDaily()" data-i18n="dailyBtn">
+  🎁 استلام المكافأة
+ </button>
+ <div id="dailyTimer" class="timer"></div>
+</div>
 
-    <div class="rate">
-      0.0001 ANF / ثانية
-    </div>
+<div class="card mining">
+ <h2 class="section-title" data-i18n="miningTitle">⛏️ التعدين</h2>
 
-    <div class="claimable" id="claimable">
-      0.00000000 ANF
-    </div>
+ <div class="rate">0.0001 ANF / <span data-i18n="second">ثانية</span></div>
 
-    <div id="miningStatus" class="status">
-      جاري التحقق...
-    </div>
+ <div class="claimable" id="claimable">
+  0.00000000 ANF
+ </div>
 
-    <button id="startBtn" onclick="startMining()">
-      🚀 بدء التعدين
-    </button>
+ <div id="miningStatus" class="status">
+  جاري التحقق...
+ </div>
 
-    <button id="claimBtn" onclick="claimMining()" disabled>
-      💰 استلام الأرباح
-    </button>
+ <button id="startBtn" onclick="startMining()" data-i18n="startMining">
+  🚀 بدء التعدين
+ </button>
 
-    <div id="message" class="status"></div>
+ <button id="claimBtn" onclick="claimMining()" disabled data-i18n="claimMining">
+  💰 استلام الأرباح
+ </button>
+</div>
 
-  </div>
+<div id="message" class="status"></div>
 
-  <div class="card">
+</section>
 
-    <h2 class="section-title">🎯 المهام</h2>
+<!-- TASKS -->
+<section id="tasks" class="page">
 
-    <div id="tasksContainer">
-      <div class="loading">جاري تحميل المهام...</div>
-    </div>
+<div class="card">
+ <h2 class="section-title" data-i18n="tasksTitle">🎯 المهام</h2>
+ <div id="tasksContainer">
+  <div class="loading" data-i18n="loading">جاري تحميل المهام...</div>
+ </div>
+</div>
 
-  </div>
+</section>
 
-  <div class="card">
+<!-- WALLET -->
+<section id="wallet" class="page">
 
-    <h2 class="section-title">👤 الحساب</h2>
+<div class="card wallet">
+ <h2 class="section-title" data-i18n="walletTitle">💎 محفظة TON</h2>
+ <div class="wallet-icon">💎</div>
 
-    <div class="row">
-      <span>المستخدم</span>
-      <span id="username">-</span>
-    </div>
+ <div id="ton-connect"></div>
 
-    <div class="row">
-      <span>Telegram ID</span>
-      <span id="telegramId">-</span>
-    </div>
+ <div id="walletAddress" class="wallet-address" style="display:none"></div>
 
-    <div class="row">
-      <span>كود الإحالة</span>
-      <span id="referralCode">-</span>
-    </div>
+ <button class="dark-btn" id="disconnectBtn"
+ onclick="disconnectWallet()" style="display:none"
+ data-i18n="disconnect">
+ قطع اتصال المحفظة
+ </button>
+</div>
 
-  </div>
+<div class="card">
+ <h2 class="section-title" data-i18n="withdrawTitle">💸 السحب</h2>
 
-  <div class="card">
-    <h2 class="section-title">👥 الإحالات</h2>
-    <button class="dark-btn" disabled>
-      🔗 نظام الإحالة قريبًا
-    </button>
-  </div>
+ <div class="row">
+  <span data-i18n="balanceLabel">الرصيد</span>
+  <span id="walletBalance">0.00000000 ANF</span>
+ </div>
 
-  <div class="card">
-    <h2 class="section-title">💸 السحب</h2>
-    <button class="dark-btn" disabled>
-      💰 السحب قريبًا
-    </button>
-  </div>
+ <button class="dark-btn" disabled data-i18n="withdrawSoon">
+  💰 السحب سيكون متاحًا قريبًا
+ </button>
+</div>
+
+</section>
+
+<!-- REFERRALS -->
+<section id="referrals" class="page">
+
+<div class="card">
+ <h2 class="section-title" data-i18n="refTitle">👥 الإحالات</h2>
+
+ <div class="row">
+  <span data-i18n="refCode">كود الإحالة</span>
+  <span id="referralCode">-</span>
+ </div>
+
+ <button onclick="copyReferral()" data-i18n="copyRef">
+  🔗 نسخ رابط الإحالة
+ </button>
+
+ <div id="refMessage" class="status"></div>
+</div>
+
+</section>
+
+<!-- SETTINGS -->
+<section id="settings" class="page">
+
+<div class="card">
+ <h2 class="section-title" data-i18n="settingsTitle">⚙️ الإعدادات</h2>
+
+ <div class="row">
+  <span data-i18n="language">اللغة</span>
+  <button onclick="toggleLanguage()" class="dark-btn" style="width:auto;margin:0;padding:7px 14px">
+   <span id="languageName">العربية</span>
+  </button>
+ </div>
+
+ <div class="row">
+  <span data-i18n="user">المستخدم</span>
+  <span id="username">-</span>
+ </div>
+
+ <div class="row">
+  <span>Telegram ID</span>
+  <span id="telegramId">-</span>
+ </div>
+</div>
+
+</section>
 
 </div>
 
+<!-- NAVIGATION -->
+<nav class="nav">
+<div class="nav-inner">
+
+<button onclick="showPage('home',this)" class="active">
+ <span class="nav-icon">🏠</span>
+ <span data-i18n="home">الرئيسية</span>
+</button>
+
+<button onclick="showPage('tasks',this)">
+ <span class="nav-icon">🎯</span>
+ <span data-i18n="tasks">المهام</span>
+</button>
+
+<button onclick="showPage('wallet',this)">
+ <span class="nav-icon">💎</span>
+ <span data-i18n="wallet">المحفظة</span>
+</button>
+
+<button onclick="showPage('referrals',this)">
+ <span class="nav-icon">👥</span>
+ <span data-i18n="referrals">الإحالات</span>
+</button>
+
+<button onclick="showPage('settings',this)">
+ <span class="nav-icon">⚙️</span>
+ <span data-i18n="settings">الإعدادات</span>
+</button>
+
+</div>
+</nav>
+
 <script>
-
-const tg = window.Telegram.WebApp;
-
+const tg=window.Telegram.WebApp;
 tg.ready();
 tg.expand();
 
-const API_URL =
-  "https://oejaiweclbxbwqikaznn.supabase.co/functions/v1/anf-api";
+const API_URL=
+"https://oejaiweclbxbwqikaznn.supabase.co/functions/v1/anf-api";
 
-const initData = tg.initData;
+const initData=tg.initData;
 
-let claimable = 0;
-let miningActive = false;
-let ratePerSecond = 0.0001;
+let claimable=0;
+let miningActive=false;
+let ratePerSecond=0.0001;
+let currentLang=localStorage.getItem("anf_lang")||"ar";
+let profileData=null;
 
-function setMessage(text, type = "") {
-  const el = document.getElementById("message");
-  el.textContent = text;
-  el.className = "status " + type;
+/* ================= LANGUAGE ================= */
+
+const translations={
+ ar:{
+  subtitle:"اربح ANF • تعدين • مهام • إحالات",
+  dailyTitle:"🎁 المكافأة اليومية",
+  dailyText:"مكافأة مجانية كل 24 ساعة",
+  dailyBtn:"🎁 استلام المكافأة",
+  miningTitle:"⛏️ التعدين",
+  second:"ثانية",
+  startMining:"🚀 بدء التعدين",
+  claimMining:"💰 استلام الأرباح",
+  tasksTitle:"🎯 المهام",
+  loading:"جاري تحميل المهام...",
+  walletTitle:"💎 محفظة TON",
+  disconnect:"قطع اتصال المحفظة",
+  withdrawTitle:"💸 السحب",
+  balanceLabel:"الرصيد",
+  withdrawSoon:"💰 السحب سيكون متاحًا قريبًا",
+  refTitle:"👥 الإحالات",
+  refCode:"كود الإحالة",
+  copyRef:"🔗 نسخ رابط الإحالة",
+  settingsTitle:"⚙️ الإعدادات",
+  language:"اللغة",
+  user:"المستخدم",
+  home:"الرئيسية",
+  tasks:"المهام",
+  wallet:"المحفظة",
+  referrals:"الإحالات",
+  settings:"الإعدادات"
+ },
+ en:{
+  subtitle:"Earn ANF • Mine • Tasks • Referrals",
+  dailyTitle:"🎁 Daily Reward",
+  dailyText:"Free reward every 24 hours",
+  dailyBtn:"🎁 Claim Reward",
+  miningTitle:"⛏️ Mining",
+  second:"second",
+  startMining:"🚀 Start Mining",
+  claimMining:"💰 Claim Earnings",
+  tasksTitle:"🎯 Tasks",
+  loading:"Loading tasks...",
+  walletTitle:"💎 TON Wallet",
+  disconnect:"Disconnect Wallet",
+  withdrawTitle:"💸 Withdraw",
+  balanceLabel:"Balance",
+  withdrawSoon:"💰 Withdraw will be available soon",
+  refTitle:"👥 Referrals",
+  refCode:"Referral Code",
+  copyRef:"🔗 Copy Referral Link",
+  settingsTitle:"⚙️ Settings",
+  language:"Language",
+  user:"User",
+  home:"Home",
+  tasks:"Tasks",
+  wallet:"Wallet",
+  referrals:"Referrals",
+  settings:"Settings"
+ }
+};
+
+function applyLanguage(){
+ const t=translations[currentLang];
+
+ document.documentElement.lang=currentLang;
+ document.documentElement.dir=currentLang==="ar"?"rtl":"ltr";
+
+ document.querySelectorAll("[data-i18n]").forEach(el=>{
+  const key=el.getAttribute("data-i18n");
+  if(t[key]) el.textContent=t[key];
+ });
+
+ document.querySelector(".lang").textContent=
+ currentLang==="ar"?"EN":"AR";
+
+ document.getElementById("languageName").textContent=
+ currentLang==="ar"?"العربية":"English";
+
+ localStorage.setItem("anf_lang",currentLang);
 }
 
-async function api(action, taskId = null) {
+function toggleLanguage(){
+ currentLang=currentLang==="ar"?"en":"ar";
+ applyLanguage();
+}
 
-  if (!initData) {
-    throw new Error("يجب فتح التطبيق من داخل Telegram");
+applyLanguage();
+
+/* ================= API ================= */
+
+function setMessage(text,type=""){
+ const el=document.getElementById("message");
+ el.textContent=text;
+ el.className="status "+type;
+}
+
+async function api(action,taskId=null){
+ if(!initData)
+  throw new Error(
+   currentLang==="ar"
+   ?"يجب فتح التطبيق من داخل Telegram"
+   :"Please open the app inside Telegram"
+  );
+
+ const body={action,initData};
+
+ if(taskId!==null)
+  body.taskId=Number(taskId);
+
+ const response=await fetch(API_URL,{
+  method:"POST",
+  headers:{"Content-Type":"application/json"},
+  body:JSON.stringify(body)
+ });
+
+ const data=await response.json();
+
+ if(!response.ok||data.success===false)
+  throw new Error(
+   data.error||
+   (currentLang==="ar"?"حدث خطأ":"An error occurred")
+  );
+
+ return data;
+}
+
+/* ================= PROFILE ================= */
+
+function updateUI(data){
+ if(!data)return;
+
+ const p=data.profile||data.user||data;
+ profileData=p;
+
+ if(p.balance!==undefined){
+  const balance=Number(p.balance).toFixed(8);
+  document.getElementById("balance").textContent=balance;
+  document.getElementById("walletBalance").textContent=balance+" ANF";
+ }
+
+ if(p.username!==undefined)
+  document.getElementById("username").textContent=
+   p.username?"@"+p.username:"-";
+
+ if(p.telegram_id!==undefined)
+  document.getElementById("telegramId").textContent=p.telegram_id;
+
+ if(p.referral_code!==undefined)
+  document.getElementById("referralCode").textContent=
+   p.referral_code||"-";
+}
+
+/* ================= DAILY ================= */
+
+let nextDailyClaim=null;
+
+async function claimDaily(){
+ const btn=document.getElementById("dailyBtn");
+
+ try{
+  btn.disabled=true;
+
+  const result=await api("daily");
+
+  updateUI(result);
+
+  if(result.next_claim_at){
+   nextDailyClaim=new Date(result.next_claim_at);
   }
 
-  const body = {
-    action: action,
-    initData: initData
-  };
+  setMessage(
+   currentLang==="ar"
+   ?"تم استلام 2 ANF بنجاح ✅"
+   :"2 ANF claimed successfully ✅",
+   "success"
+  );
 
-  if (taskId !== null) {
-    body.taskId = Number(taskId);
+  updateDailyButton();
+
+ }catch(e){
+  setMessage(e.message,"error");
+  btn.disabled=false;
+ }
+}
+
+function updateDailyButton(){
+ const btn=document.getElementById("dailyBtn");
+ const timer=document.getElementById("dailyTimer");
+
+ if(!nextDailyClaim){
+  btn.disabled=false;
+  timer.textContent="";
+  return;
+ }
+
+ const diff=nextDailyClaim-Date.now();
+
+ if(diff<=0){
+  btn.disabled=false;
+  timer.textContent="";
+  nextDailyClaim=null;
+  return;
+ }
+
+ btn.disabled=true;
+
+ const h=Math.floor(diff/3600000);
+ const m=Math.floor((diff%3600000)/60000);
+ const s=Math.floor((diff%60000)/1000);
+
+ timer.textContent=
+  currentLang==="ar"
+  ?`⏳ متبقي ${h}س ${m}د ${s}ث`
+  :`⏳ ${h}h ${m}m ${s}s remaining`;
+}
+
+/* ================= MINING ================= */
+
+async function loadStatus(){
+ try{
+  const result=await api("status");
+  updateUI(result);
+
+  const status=result.status||result.data||result;
+
+  if(status.claimable!==undefined)
+   claimable=Number(status.claimable);
+
+  if(status.rate_per_second!==undefined)
+   ratePerSecond=Number(status.rate_per_second);
+
+  miningActive=Boolean(status.active);
+
+  renderMining();
+ }catch(e){
+  document.getElementById("miningStatus").textContent=
+   currentLang==="ar"
+   ?"تعذر تحميل حالة التعدين"
+   :"Unable to load mining status";
+ }
+}
+
+function renderMining(){
+ document.getElementById("claimable").textContent=
+  claimable.toFixed(8)+" ANF";
+
+ document.getElementById("claimBtn").disabled=
+  claimable<=0;
+
+ document.getElementById("startBtn").disabled=
+  miningActive;
+
+ document.getElementById("miningStatus").textContent=
+  miningActive
+  ?(currentLang==="ar"?"🟢 التعدين يعمل":"🟢 Mining active")
+  :(currentLang==="ar"?"⚪ التعدين متوقف":"⚪ Mining stopped");
+}
+
+async function startMining(){
+ try{
+  setMessage(
+   currentLang==="ar"
+   ?"جاري بدء التعدين..."
+   :"Starting mining..."
+  );
+
+  const result=await api("start");
+  miningActive=true;
+  updateUI(result);
+
+  setMessage(
+   currentLang==="ar"
+   ?"تم بدء دورة التعدين لمدة 24 ساعة ✅"
+   :"24-hour mining cycle started ✅",
+   "success"
+  );
+
+  await loadStatus();
+ }catch(e){
+  setMessage(e.message,"error");
+ }
+}
+
+async function claimMining(){
+ try{
+  if(claimable<=0){
+   setMessage(
+    currentLang==="ar"
+    ?"لا توجد أرباح للاستلام حاليًا"
+    :"No earnings available"
+   );
+   return;
   }
 
-  const response = await fetch(API_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(body)
+  document.getElementById("claimBtn").disabled=true;
+
+  const result=await api("claim");
+  const reward=Number(result.reward||0);
+
+  claimable=0;
+
+  updateUI(result);
+
+  setMessage(
+   currentLang==="ar"
+   ?"تم استلام "+reward.toFixed(8)+" ANF ✅"
+   :"Claimed "+reward.toFixed(8)+" ANF ✅",
+   "success"
+  );
+
+  await loadStatus();
+ }catch(e){
+  setMessage(e.message,"error");
+  renderMining();
+ }
+}
+
+/* ================= TASKS ================= */
+
+async function loadTasks(){
+ const container=document.getElementById("tasksContainer");
+
+ try{
+  const result=await api("tasks");
+  const tasks=result.tasks||result.data||[];
+
+  if(!tasks.length){
+   container.innerHTML=
+    `<div class="loading">${
+     currentLang==="ar"
+     ?"لا توجد مهام حاليًا"
+     :"No tasks available"
+    }</div>`;
+   return;
+  }
+
+  container.innerHTML="";
+
+  tasks.forEach(task=>{
+   const div=document.createElement("div");
+   div.className="task";
+
+   const claimed=Boolean(task.claimed);
+
+   div.innerHTML=`
+    <div class="task-title">
+     ${escapeHtml(task.title||"Task")}
+    </div>
+
+    <div class="task-desc">
+     ${escapeHtml(task.description||"")}
+    </div>
+
+    <div class="reward">
+     🎁 ${currentLang==="ar"?"المكافأة":"Reward"}:
+     ${Number(task.reward||0)} ANF
+    </div>
+
+    <div class="task-actions">
+     <button class="visit"
+      onclick="openTask('${escapeAttr(task.url||"")}')">
+      🔗 ${currentLang==="ar"?"فتح المهمة":"Open Task"}
+     </button>
+
+     <button id="claim-task-${task.id}"
+      ${claimed?"disabled":""}
+      onclick="claimTask(${task.id})">
+      ${claimed
+       ?"✅ "+(currentLang==="ar"?"تم الاستلام":"Claimed")
+       :"🎁 "+(currentLang==="ar"?"استلام":"Claim")}
+     </button>
+    </div>
+
+    <div class="timer">
+     ${claimed
+      ?(currentLang==="ar"
+        ?"⏳ متاح مرة أخرى بعد 24 ساعة"
+        :"⏳ Available again after 24 hours")
+      :(currentLang==="ar"
+        ?"يجب تنفيذ المهمة قبل استلام المكافأة"
+        :"Complete the task before claiming")}
+    </div>
+   `;
+
+   container.appendChild(div);
   });
 
-  const data = await response.json();
-
-  if (!response.ok || data.success === false) {
-    throw new Error(
-      data.error || "حدث خطأ في الاتصال"
-    );
-  }
-
-  return data;
+ }catch(e){
+  container.innerHTML=
+   `<div class="status error">${escapeHtml(e.message)}</div>`;
+ }
 }
 
-function updateUI(data) {
-
-  if (!data) return;
-
-  const profile =
-    data.profile ||
-    data.user ||
-    data;
-
-  if (profile.balance !== undefined) {
-    document.getElementById("balance")
-      .textContent =
-      Number(profile.balance).toFixed(8);
-  }
-
-  if (profile.username !== undefined) {
-    document.getElementById("username")
-      .textContent =
-      profile.username
-        ? "@" + profile.username
-        : "-";
-  }
-
-  if (profile.telegram_id !== undefined) {
-    document.getElementById("telegramId")
-      .textContent =
-      profile.telegram_id;
-  }
-
-  if (profile.referral_code !== undefined) {
-    document.getElementById("referralCode")
-      .textContent =
-      profile.referral_code || "-";
-  }
+function openTask(url){
+ if(!url)return;
+ try{tg.openLink(url)}
+ catch{window.open(url,"_blank")}
 }
 
-async function loadStatus() {
-
-  try {
-
-    const result = await api("status");
-
-    updateUI(result);
-
-    const status =
-      result.status ||
-      result.data ||
-      result;
-
-    if (status.claimable !== undefined) {
-      claimable = Number(status.claimable);
-    }
-
-    if (status.rate_per_second !== undefined) {
-      ratePerSecond = Number(status.rate_per_second);
-    }
-
-    miningActive = Boolean(status.active);
-
-    renderMining();
-
-  } catch (error) {
-
-    setMessage(error.message, "error");
-
-    document.getElementById("miningStatus")
-      .textContent =
-      "تعذر تحميل حالة التعدين";
-  }
-}
-
-function renderMining() {
-
-  document.getElementById("claimable")
-    .textContent =
-    claimable.toFixed(8) + " ANF";
-
-  document.getElementById("claimBtn")
-    .disabled =
-    claimable <= 0;
-
-  document.getElementById("startBtn")
-    .disabled =
-    miningActive;
-
-  document.getElementById("miningStatus")
-    .textContent =
-    miningActive
-      ? "🟢 التعدين يعمل"
-      : "⚪ التعدين متوقف";
-}
-
-async function startMining() {
-
-  try {
-
-    setMessage("جاري بدء التعدين...");
-
-    const result =
-      await api("start");
-
-    miningActive = true;
-
-    updateUI(result);
-
-    setMessage(
-      "تم بدء دورة التعدين لمدة 24 ساعة ✅",
-      "success"
-    );
-
-    await loadStatus();
-
-  } catch (error) {
-
-    setMessage(error.message, "error");
-  }
-}
-
-async function claimMining() {
-
-  try {
-
-    if (claimable <= 0) {
-
-      setMessage(
-        "لا توجد أرباح للاستلام حاليًا"
-      );
-
-      return;
-    }
-
-    document.getElementById("claimBtn")
-      .disabled = true;
-
-    setMessage(
-      "جاري استلام الأرباح..."
-    );
-
-    const result =
-      await api("claim");
-
-    const reward =
-      Number(result.reward || 0);
-
-    claimable = 0;
-
-    if (result.profile) {
-      updateUI(result);
-    }
-
-    setMessage(
-      "تم استلام " +
-      reward.toFixed(8) +
-      " ANF ✅",
-      "success"
-    );
-
-    await loadStatus();
-
-  } catch (error) {
-
-    setMessage(error.message, "error");
-
-    renderMining();
-  }
-}
-
-async function loadTasks() {
-
-  const container =
-    document.getElementById("tasksContainer");
-
-  try {
-
-    const result =
-      await api("tasks");
-
-    const tasks =
-      result.tasks ||
-      result.data ||
-      [];
-
-    if (!tasks.length) {
-
-      container.innerHTML =
-        '<div class="loading">لا توجد مهام حاليًا</div>';
-
-      return;
-    }
-
-    container.innerHTML = "";
-
-    tasks.forEach(task => {
-
-      const div =
-        document.createElement("div");
-
-      div.className = "task";
-
-      const claimed =
-        Boolean(task.claimed);
-
-      div.innerHTML = `
-        <div class="task-title">
-          ${escapeHtml(task.title || "مهمة")}
-        </div>
-
-        <div class="task-desc">
-          ${escapeHtml(task.description || "")}
-        </div>
-
-        <div class="reward">
-          🎁 المكافأة: ${Number(task.reward || 2).toFixed(0)} ANF
-        </div>
-
-        <div class="task-actions">
-
-          <button
-            class="visit"
-            onclick="openTask('${escapeAttr(task.url || "")}')">
-            🔗 فتح المهمة
-          </button>
-
-          <button
-            id="claim-task-${task.id}"
-            ${claimed ? "disabled" : ""}
-            onclick="claimTask(${task.id})">
-            ${claimed ? "✅ تم الاستلام" : "🎁 استلام"}
-          </button>
-
-        </div>
-
-        ${
-          claimed
-          ? '<div class="timer">⏳ يمكنك الاستلام مرة أخرى بعد 24 ساعة</div>'
-          : '<div class="timer">كل مهمة متاحة مرة واحدة كل 24 ساعة</div>'
-        }
-      `;
-
-      container.appendChild(div);
-    });
-
-  } catch (error) {
-
-    container.innerHTML =
-      '<div class="status error">' +
-      escapeHtml(error.message) +
-      '</div>';
-  }
-}
-
-function openTask(url) {
-
-  if (!url) return;
-
-  try {
-    tg.openLink(url);
-  } catch {
-    window.open(url, "_blank");
-  }
-}
-
-async function claimTask(taskId) {
-
-  const button =
-    document.getElementById(
-      "claim-task-" + taskId
-    );
-
-  try {
-
-    if (button) {
-      button.disabled = true;
-      button.textContent = "⏳ جاري...";
-    }
-
-    setMessage(
-      "جاري إضافة مكافأة المهمة..."
-    );
-
-    const result =
-      await api("claim_task", taskId);
-
-    const reward =
-      Number(result.reward || 2);
-
-    if (result.profile) {
-      updateUI(result);
-    }
-
-    setMessage(
-      "تمت إضافة " +
-      reward.toFixed(0) +
-      " ANF إلى رصيدك ✅",
-      "success"
-    );
-
-    await loadTasks();
-
-    await loadStatus();
-
-  } catch (error) {
-
-    if (button) {
-      button.disabled = false;
-      button.textContent = "🎁 استلام";
-    }
-
-    setMessage(
-      error.message,
-      "error"
-    );
-  }
-}
-
-function escapeHtml(value) {
-
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function escapeAttr(value) {
-
-  return String(value)
-    .replaceAll("\\", "\\\\")
-    .replaceAll("'", "\\'");
-}
-
-setInterval(() => {
-
-  if (miningActive) {
-
-    claimable += ratePerSecond;
-
-    renderMining();
+async function claimTask(taskId){
+ const button=document.getElementById("claim-task-"+taskId);
+
+ try{
+  if(button){
+   button.disabled=true;
+   button.textContent=
+    currentLang==="ar"?"⏳ جاري...":"⏳ Checking...";
   }
 
-}, 1000);
+  const result=await api("claim_task",taskId);
 
-setInterval(() => {
+  const reward=Number(result.reward||0);
 
-  loadStatus();
+  updateUI(result);
 
-}, 30000);
+  setMessage(
+   currentLang==="ar"
+   ?"تمت إضافة "+reward+" ANF إلى رصيدك ✅"
+   :reward+" ANF added to your balance ✅",
+   "success"
+  );
 
-setInterval(() => {
+  await loadTasks();
+  await loadStatus();
 
-  loadTasks();
+ }catch(e){
+  if(button){
+   button.disabled=false;
+   button.textContent=
+    currentLang==="ar"?"🎁 استلام":"🎁 Claim";
+  }
 
-}, 60000);
+  setMessage(e.message,"error");
+ }
+}
+
+/* ================= TON CONNECT ================= */
+
+let tonConnectUI=null;
+
+function initTonConnect(){
+
+ try{
+
+  tonConnectUI=new TON_CONNECT_UI.TonConnectUI({
+   manifestUrl:
+   window.location.origin+
+   "/tonconnect-manifest.json",
+   buttonRootId:"ton-connect"
+  });
+
+  tonConnectUI.onStatusChange(wallet=>{
+   if(wallet){
+    const address=wallet.account.address;
+
+    document.getElementById("walletAddress").style.display="block";
+    document.getElementById("walletAddress").textContent=
+     currentLang==="ar"
+     ?"متصل: "+address
+     :"Connected: "+address;
+
+    document.getElementById("disconnectBtn").style.display="block";
+   }else{
+    document.getElementById("walletAddress").style.display="none";
+    document.getElementById("disconnectBtn").style.display="none";
+   }
+  });
+
+ }catch(e){
+  console.log("TON Connect:",e);
+ }
+}
+
+async function disconnectWallet(){
+ try{
+  if(tonConnectUI)
+   await tonConnectUI.disconnect();
+ }catch(e){}
+}
+
+/* ================= REFERRAL ================= */
+
+async function copyReferral(){
+
+ const code=document.getElementById("referralCode").textContent;
+
+ if(!code||code==="-" )return;
+
+ const link=
+  "https://t.me/ANF_AIRDROP_BOT?start="+code;
+
+ try{
+  await navigator.clipboard.writeText(link);
+
+  document.getElementById("refMessage").textContent=
+   currentLang==="ar"
+   ?"تم نسخ رابط الإحالة ✅"
+   :"Referral link copied ✅";
+
+ }catch{
+  document.getElementById("refMessage").textContent=link;
+ }
+}
+
+/* ================= NAV ================= */
+
+function showPage(page,button){
+
+ document.querySelectorAll(".page")
+  .forEach(x=>x.classList.remove("active"));
+
+ document.getElementById(page)
+  .classList.add("active");
+
+ document.querySelectorAll(".nav button")
+  .forEach(x=>x.classList.remove("active"));
+
+ if(button)button.classList.add("active");
+}
+
+/* ================= SECURITY HELPERS ================= */
+
+function escapeHtml(value){
+ return String(value)
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+}
+
+function escapeAttr(value){
+ return String(value)
+  .replaceAll("\\","\\\\")
+  .replaceAll("'","\\'");
+}
+
+/* ================= LIVE ================= */
+
+setInterval(()=>{
+ if(miningActive){
+  claimable+=ratePerSecond;
+  renderMining();
+ }
+},1000);
+
+setInterval(()=>{
+ loadStatus();
+},30000);
+
+setInterval(()=>{
+ loadTasks();
+},60000);
+
+setInterval(()=>{
+ updateDailyButton();
+},1000);
+
+/* ================= START ================= */
 
 loadStatus();
 loadTasks();
-
+initTonConnect();
 </script>
 
 </body>
